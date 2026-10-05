@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Mirai AI Analyst: Your AI business analyst</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="w">
+            <nav>
+                <a class="logo" href="#top"><i></i>Mirai AI Analyst</a>
+                <a class="l" href="#product">Product</a><a class="l" href="#solutions">Solutions</a><a class="l" href="#how">How it works</a><a class="l" href="#pricing">Pricing</a><a class="l" href="#about">About</a><a class="l" href="#contact">Services</a>
+                <a class="btn p" href="#demo">Try Mirai Free</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero">
+            <div class="w">
+                <p class="lb">MIRAI AI ANALYST</p>
+                <h1>Your AI Business Analyst</h1>
+                <p class="lead">Upload your Excel or CSV. Get dashboards, insights, forecasts and answers in minutes.</p>
+                <p class="lead" style="margin-top:6px">No SQL. No complicated BI setup. No full-time data analyst required.</p>
+                <div class="cta"><a class="btn p" href="#demo">Try Mirai Free →</a><a class="btn s" href="#how">See How It Works</a></div>
+                <p class="note">Excel &amp; CSV · AI Analytics · Interactive Dashboards · Business Insights</p>
+                <div class="demo" id="demo">
+                    <div class="bar"><b></b><b></b><b></b><span id="barname">Try it with your own Excel or CSV file</span></div>
+                    <div class="drop" id="drop">
+                        <h3>Drop your Excel or CSV here</h3>
+                        <p>Sales, expenses, students, HR, inventory, surveys: any table works. Mirai builds a full dashboard and an AI analyst you can chat with. Your file is read in your browser and is not uploaded.</p>
+                        <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+                        <button class="btn p" id="pick">Choose Excel or CSV file</button> <button class="btn s" id="load">Use sample data</button>
+                        <p id="err" role="alert" style="color:var(--bad);margin:14px 0 0"></p>
+                    </div>
+                    <div id="app" hidden>
+                        <div class="tabs"><button class="tb on" data-t="dashT">Dashboard</button><button class="tb" data-t="askT">Ask Mirai</button><button class="tb" data-t="dataT">Data</button><span class="sp0"></span><button class="btn s sm" id="exp">Export cleaned CSV</button>
+                            <button class="btn s sm" id="again">New file</button>
+                        </div>
+                        <div class="tp" id="dashT">
+                            <div class="tool" id="tool"></div>
+                            <div class="kp4" id="kp"></div>
+                            <div class="ins2" id="ins"></div>
+                            <div class="gr">
+                                <div class="cd w2">
+                                    <h4 id="h1">Trend over time</h4>
+                                    <div class="cv"><canvas id="ch1"></canvas></div>
+                                </div>
+                                <div class="cd">
+                                    <h4 id="h2">Share of revenue</h4>
+                                    <div class="cv"><canvas id="ch2"></canvas></div>
+                                </div>
+                                <div class="cd">
+                                    <h4 id="h3">Top products</h4>
+                                    <div class="cv"><canvas id="ch3"></canvas></div>
+                                </div>
+                                <div class="cd">
+                                    <h4 id="h4">By weekday</h4>
+                                    <div class="cv"><canvas id="ch4"></canvas></div>
+                                </div>
+                                <div class="cd">
+                                    <h4 id="h5">Distribution</h4>
+                                    <div class="cv"><canvas id="ch5"></canvas></div>
+                                </div>
+                                <div class="cd w2">
+                                    <h4 id="h6">Relationship between columns</h4>
+                                    <div class="cv"><canvas id="ch6"></canvas></div>
+                                </div>
+                                <div class="cd">
+                                    <h4>Top records</h4>
+                                    <div class="tw" id="tc"></div>
+                                </div>
+                                <div class="cd">
+                                    <h4>Unusual values and data quality</h4>
+                                    <div id="an"></div>
+                                </div>
+                            </div>
+                            <p class="note">Projections are a simple trend line on your monthly figures, not a guarantee.</p>
+                        </div>
+                        <div class="tp" id="askT" hidden>
+                            <div class="msgs" id="msgs" aria-live="polite"></div>
+                            <div id="chips"></div>
+                            <div class="inp"><input id="qi" placeholder="Ask anything about your data…" autocomplete="off" aria-label="Ask Mirai"><button class="btn p" id="sb">Send</button></div>
+                            <p class="note">Mirai AI reads a summary of your data (totals, top items, monthly figures) and runs calculations on it. The full file stays in your browser. Answers can be wrong, so check important numbers in the Data tab.</p>
+                        </div>
+                        <div class="tp" id="dataT" hidden>
+                            <h4>What Mirai did</h4>
+                            <div id="rep"></div>
+                            <h4>Columns and types</h4>
+                            <p class="note">Mirai guessed each column's type. Change any that look wrong and everything updates.</p>
+                            <div class="mp" id="mp"></div>
+                            <h4>Preview</h4>
+                            <div class="tw" id="pv"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="problem">
+            <div class="w">
+                <p class="lb">THE PROBLEM</p>
+                <h2>Your business has data. But do you have answers?</h2>
+                <p class="lead">Small businesses collect a lot of data across Excel files, CSVs and accounting tools. Turning it into decisions is slow and hard.</p>
+                <div class="feat">
+                    <div>
+                        <h3>Scattered data</h3>
+                        <p>Sales, customer and product information lives across multiple spreadsheets.</p>
+                    </div>
+                    <div>
+                        <h3>No clear visibility</h3>
+                        <p>Important business metrics are buried inside raw data.</p>
+                    </div>
+                    <div>
+                        <h3>Manual reporting</h3>
+                        <p>Teams spend hours creating the same reports every week.</p>
+                    </div>
+                    <div>
+                        <h3>Missed opportunities</h3>
+                        <p>Patterns, risks and revenue opportunities go unnoticed.</p>
+                    </div>
+                </div>
+                <div class="cta"><a class="btn p" href="#demo">Let Mirai Analyze It →</a></div>
+            </div>
+        </section>
+
+        <section id="how" style="padding-top:0">
+            <div class="w">
+                <p class="lb">HOW MIRAI WORKS</p>
+                <h2>From Excel to business intelligence in minutes.</h2>
+                <ol class="steps">
+                    <li>
+                        <div>
+                            <h3>Upload</h3>
+                            <p>Upload Excel or CSV files.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <h3>Clean</h3>
+                            <p>Mirai finds duplicates, missing values, inconsistent formats and data-quality problems.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <h3>Understand</h3>
+                            <p>AI identifies the important business dimensions and metrics.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <h3>Visualize</h3>
+                            <p>Mirai creates an interactive business dashboard.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <h3>Ask</h3>
+                            <p>Ask questions about your business in plain language.</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section id="product" style="padding-top:0">
+            <div class="w">
+                <p class="lb">POWERFUL ANALYTICS. SIMPLE EXPERIENCE.</p>
+                <h2>Everything you need to understand your business.</h2>
+                <div class="feat">
+                    <div>
+                        <h3>AI data analysis</h3>
+                        <p>Analyze uploaded business data and find important patterns.</p>
+                    </div>
+                    <div>
+                        <h3>Automatic dashboards</h3>
+                        <p>Dashboards built from the structure and contents of your file.</p>
+                    </div>
+                    <div>
+                        <h3>Ask your data</h3>
+                        <p>Ask in plain English instead of writing SQL.</p>
+                    </div>
+                    <div>
+                        <h3>Sales analytics</h3>
+                        <p>Track revenue, orders, growth and product performance.</p>
+                    </div>
+                    <div>
+                        <h3>Customer analytics</h3>
+                        <p>Find high-value customers, segments and behavior.</p>
+                    </div>
+                    <div>
+                        <h3>Profit analytics</h3>
+                        <p>Understand revenue, costs, margins and profitability.</p>
+                    </div>
+                    <div>
+                        <h3>Forecasting <span class="soon">Coming soon</span></h3>
+                        <p>Use historical data to estimate future trends.</p>
+                    </div>
+                    <div>
+                        <h3>Anomaly detection <span class="soon">Coming soon</span></h3>
+                        <p>Spot unusual changes, unexpected drops and suspicious records.</p>
+                    </div>
+                    <div>
+                        <h3>AI recommendations <span class="soon">Coming soon</span></h3>
+                        <p>Turn analysis into understandable business actions.</p>
+                    </div>
+                    <div>
+                        <h3>Automated reports <span class="soon">Coming soon</span></h3>
+                        <p>Recurring business reports for owners and management.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ask" style="padding-top:0">
+            <div class="w">
+                <p class="lb">MEET YOUR AI ANALYST</p>
+                <h2>Just ask your data.</h2>
+                <p class="lead">You shouldn't need SQL, formulas or complicated dashboards to understand your business.</p>
+                <div class="mock">
+                    <div class="chat" style="min-height:0;max-height:none">
+                        <div class="m u">Why did profit decline?</div>
+                        <div class="m a"><strong>Profit fell 11.3% from the previous month.</strong><br>Two products explain most of it: Linen shirt sales dropped ₹0.9L after a stock-out, and Canvas tote discounts cut its margin.
+                            <div style="margin-top:12px">
+                                <div class="hb"><em>Linen shirt</em><span style="width:70%;background:#c2412d"></span></div>
+                                <div class="hb"><em>Canvas tote</em><span style="width:35%;background:#c2412d"></span></div>
+                                <div class="hb"><em>Cotton kurta</em><span style="width:20%"></span></div>
+                            </div>
+                            <p style="margin-top:10px"><b>Next step:</b> Restock Linen shirt earlier and review the Canvas tote discount.</p>
+                        </div>
+                    </div>
+                    <small class="tag">Illustration with sample data. Try the real demo at the top of the page.</small>
+                </div>
+                <div class="qlist">
+                    <div>"What were my best-selling products last month?"</div>
+                    <div>"Which customers generated the most revenue?"</div>
+                    <div>"Which products should I investigate?"</div>
+                    <div>"Show me the sales trend for the last 6 months."</div>
+                </div>
+                <div class="cta"><a class="btn p" href="#demo">Ask Mirai →</a></div>
+            </div>
+        </section>
+
+        <section id="dashboard" style="padding-top:0">
+            <div class="w">
+                <p class="lb">YOUR BUSINESS AT A GLANCE</p>
+                <h2>One dashboard. Every important number.</h2>
+                <div class="k4">
+                    <div class="kpi"><small>Revenue</small><strong>₹24.6L</strong></div>
+                    <div class="kpi"><small>Profit</small><strong>₹6.2L</strong></div>
+                    <div class="kpi"><small>Orders</small><strong>4,821</strong></div>
+                    <div class="kpi"><small>Growth</small><strong class="up">+18.4%</strong></div>
+                </div>
+                <div class="ins"><b>Mirai insight</b>Product A generated the highest revenue, but Product C has the strongest profit margin.</div>
+                <p class="note">Sample figures. Your dashboard shows revenue and profit trends, sales by product, customer contribution and product profitability.</p>
+                <div class="cta"><a class="btn p" href="#demo">Explore the demo dashboard →</a></div>
+            </div>
+        </section>
+
+        <section id="solutions" style="padding-top:0">
+            <div class="w">
+                <p class="lb">BUILT FOR REAL BUSINESSES</p>
+                <h2>Analytics for the way you actually work.</h2>
+                <div class="feat">
+                    <div>
+                        <h3>E-commerce</h3>
+                        <p>Understand products, customers, revenue and profitability.</p>
+                    </div>
+                    <div>
+                        <h3>Retail</h3>
+                        <p>Track sales, inventory and product performance.</p>
+                    </div>
+                    <div>
+                        <h3>D2C brands</h3>
+                        <p>Understand customer acquisition, retention and revenue.</p>
+                    </div>
+                    <div>
+                        <h3>Restaurants</h3>
+                        <p>Analyze orders, menu performance, revenue and peak periods.</p>
+                    </div>
+                    <div>
+                        <h3>Distributors</h3>
+                        <p>See products, customers, regions and sales performance.</p>
+                    </div>
+                    <div>
+                        <h3>Small businesses</h3>
+                        <p>Professional analytics without a full-time data team.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="usecases" style="padding-top:0">
+            <div class="w">
+                <h2>What can Mirai answer?</h2>
+                <div class="qlist">
+                    <div><small>Sales</small>Which products are driving revenue?</div>
+                    <div><small>Customers</small>Who are my highest-value customers?</div>
+                    <div><small>Profit</small>Which products generate the most profit?</div>
+                    <div><small>Growth</small>Where is my business growing?</div>
+                    <div><small>Problems</small>What changed this month?</div>
+                    <div><small>Forecast</small>What could my sales look like next month?</div>
+                    <div><small>Recommendations</small>What should I focus on?</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="why" style="padding-top:0">
+            <div class="w">
+                <h2>Spend less time preparing reports. Spend more time running your business.</h2>
+                <div class="cmp">
+                    <div class="old">
+                        <h3>Without Mirai</h3>
+                        <ul class="fl">
+                            <li>Excel files</li>
+                            <li>Manual cleaning</li>
+                            <li>Manual formulas</li>
+                            <li>Manual charts</li>
+                            <li>Report preparation</li>
+                            <li>Management meeting</li>
+                            <li>Decision</li>
+                        </ul>
+                    </div>
+                    <div class="new">
+                        <h3>With Mirai</h3>
+                        <ul class="fl">
+                            <li>Business data</li>
+                            <li>AI analysis</li>
+                            <li>Automatic dashboard</li>
+                            <li>Ask questions</li>
+                            <li>AI insights</li>
+                            <li>Recommendations</li>
+                            <li>Decision</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects" style="padding-top:0">
+            <div class="w">
+                <h2>Analytics projects</h2>
+                <p class="lead">Examples of dashboards and analytics solutions built by the Mirai team.</p>
+                <div class="feat">
+                    <div>
+                        <h3>Europe Sales Performance Dashboard</h3>
+                        <p>Sales, Europe, Power BI. Revenue, profit and units sold by country, item type and sales channel.</p>
+                    </div>
+                    <div>
+                        <h3>Global Financial Performance Dashboard</h3>
+                        <p>Finance, FMCG, Power BI. Sales, COGS and gross sales by year, segment, product and country.</p>
+                    </div>
+                    <div>
+                        <h3>Asian Paints Stock Market Analysis</h3>
+                        <p>Finance, stock market, Power BI. Price, turnover and volume trends over time.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing">
+            <div class="w">
+                <h2>Simple pricing</h2>
+                <p class="lead">Start free and upgrade as Mirai becomes part of how you run your business. Prices are indicative until validated with customers.</p>
+                <div class="plans">
+                    <div class="plan">
+                        <h3>Free</h3>
+                        <div class="price">₹0<small>/month</small></div>
+                        <ul>
+                            <li>Limited uploads</li>
+                            <li>Basic dashboard</li>
+                            <li>Basic AI questions</li>
+                            <li>Limited history</li>
+                        </ul><a class="btn s" style="margin-top:14px;text-align:center" href="#demo">Start Free</a></div>
+                    <div class="plan">
+                        <h3>Starter</h3>
+                        <div class="price">₹999<small>/month</small></div>
+                        <ul>
+                            <li>More data uploads</li>
+                            <li>Full dashboards</li>
+                            <li>AI business questions</li>
+                            <li>Basic forecasting</li>
+                            <li>Reports</li>
+                        </ul><a class="btn s" style="margin-top:14px;text-align:center" href="mailto:miraiaianalyst@gmail.com?subject=Mirai%20Starter">Start Starter</a></div>
+                    <div class="plan hi">
+                        <h3>Growth</h3>
+                        <div class="price">₹2,999<small>/month</small></div>
+                        <ul>
+                            <li>Higher data limits</li>
+                            <li>Advanced AI analysis</li>
+                            <li>Forecasting</li>
+                            <li>Anomaly detection</li>
+                            <li>Automated reports</li>
+                            <li>Multiple dashboards</li>
+                        </ul><a class="btn p" style="margin-top:14px;text-align:center" href="mailto:miraiaianalyst@gmail.com?subject=Mirai%20Growth">Start Growth</a></div>
+                    <div class="plan">
+                        <h3>Business</h3>
+                        <div class="price">₹7,999<small>/month</small></div>
+                        <ul>
+                            <li>Multiple users</li>
+                            <li>Advanced analytics</li>
+                            <li>Priority support</li>
+                            <li>Custom integrations</li>
+                            <li>Custom dashboards</li>
+                            <li>Advanced reporting</li>
+                        </ul><a class="btn s" style="margin-top:14px;text-align:center" href="#contact">Contact Sales</a></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="security" style="padding-top:0">
+            <div class="w">
+                <h2>Built for businesses that depend on their data.</h2>
+                <div class="feat">
+                    <div>
+                        <h3>Data security</h3>
+                        <p>Your business data should stay private and protected.</p>
+                    </div>
+                    <div>
+                        <h3>Reliable analytics</h3>
+                        <p>Clear calculations and transparent metrics.</p>
+                    </div>
+                    <div>
+                        <h3>Simple experience</h3>
+                        <p>Designed for business owners, not data scientists.</p>
+                    </div>
+                    <div>
+                        <h3>Human support</h3>
+                        <p>Help is available when you need it.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" style="padding-top:0">
+            <div class="w two" style="align-items:center">
+                <div>
+                    <h2>Built by people who believe every business deserves an analyst.</h2>
+                </div>
+                <div>
+                    <p class="lead" style="margin-top:0">Mirai AI Analyst was created with a simple idea: powerful business analytics shouldn't be available only to companies with large data teams. We're building an AI analyst that makes business intelligence accessible to growing businesses.</p>
+                    <p style="margin-top:16px"><strong>Shivam Laxmikant Deshmukh</strong><br>Founder, Mirai AI Analyst<br>B.Tech in AI and Data Science, Vishwakarma University</p>
+                    <p class="note">Python · SQL · Power BI · Data Analytics · AI</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq" style="padding-top:0">
+            <div class="w">
+                <h2>Questions</h2>
+                <div style="margin-top:24px">
+                    <details>
+                        <summary>What type of data can I upload?</summary>
+                        <p>Any Excel or CSV table with a header row: sales, expenses, students, HR, inventory, surveys and more. Mirai finds the numbers, categories and dates on its own. More integrations will come later.</p>
+                    </details>
+                    <details>
+                        <summary>Do I need SQL knowledge?</summary>
+                        <p>No. Mirai is designed so business users can ask questions in natural language.</p>
+                    </details>
+                    <details>
+                        <summary>Can Mirai create dashboards automatically?</summary>
+                        <p>Yes. Try the demo above: upload a file and Mirai builds a dashboard from it.</p>
+                    </details>
+                    <details>
+                        <summary>Can I ask questions about my data?</summary>
+                        <p>Yes. Mirai uses AI to answer free-form questions, and it calculates every number from your file instead of guessing. The full product with accounts and saved history is being built.</p>
+                    </details>
+                    <details>
+                        <summary>Can Mirai forecast sales?</summary>
+                        <p>Forecasting based on your history is on the roadmap.</p>
+                    </details>
+                    <details>
+                        <summary>Is my data secure?</summary>
+                        <p>In the demo, your file is read in your browser and not uploaded. Security details for the full product will be published before launch.</p>
+                    </details>
+                    <details>
+                        <summary>Can multiple employees use one account?</summary>
+                        <p>Yes, on the Business plan.</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" style="padding-top:0">
+            <div class="w two">
+                <div>
+                    <p class="lb">NEED A PERSON TO HELP?</p>
+                    <h2>Talk to us</h2>
+                    <p class="lead">Mirai started as an analytics practice, and we still build custom dashboards, clean data and automate reports. Send a note and we will review your setup for free.</p>
+                    <p class="lead">Email: <a href="mailto:miraiaianalyst@gmail.com">miraiaianalyst@gmail.com</a><br>WhatsApp: <a href="https://wa.me/918975924587">+91 89759 24587</a><br>Pune, Maharashtra, India</p>
+                </div>
+                <form id="f" onsubmit="return send(event)">
+                    <label>Your name<input name="n" required></label>
+                    <label>Company<input name="c" required></label>
+                    <label>Email<input type="email" name="e" required></label>
+                    <label>WhatsApp number<input name="w"></label>
+                    <label>What do you need help with?<textarea name="m" rows="3" placeholder="Example: I run an online store and want to know which products make the most profit."></textarea></label>
+                    <button class="btn p" type="submit">Get my free data audit</button>
+                </form>
+            </div>
+        </section>
+
+        <section style="padding-top:0">
+            <div class="w">
+                <div class="band">
+                    <p class="lb" style="color:var(--hl)">READY TO UNDERSTAND YOUR DATA?</p>
+                    <h2>Your data already has the answers.</h2>
+                    <p style="margin:14px 0 0;opacity:.8">Upload it. Ask questions. Discover what's happening in your business.</p>
+                    <div class="cta" style="justify-content:center"><a class="btn p" href="#demo">Try Mirai Free →</a><a class="btn s" href="#contact" style="color:inherit;border-color:rgba(255,255,255,.4)">Talk to Us</a></div>
+                    <p style="margin-top:26px;opacity:.7">Every business deserves an analyst. Meet Mirai, your AI Business Analyst.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+    <footer>
+        <div class="w"><span>© 2026 Mirai AI Analyst, Pune, India</span><span>miraiaianalyst@gmail.com</span></div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+
+</html>
