@@ -164,17 +164,28 @@ if(a.sort==="chronological"||(!a.sort&&(g==="month"||g==="year")))out.sort(funct
 return {matching_rows:rs.length,rows:out.slice(0,Math.min(+a.limit||10,30)).map(function(x){return [x[0],Math.round(x[1]*100)/100]})}}
 var TOOL={name:"query_data",description:"Run a calculation on the user's spreadsheet rows. Returns [group, value] rows. Use it for any number not in the summary. measure must be a numeric column (omit to count rows). group_by is a column name, or month/year/weekday for the date column, or none.",inputSchema:{type:"object",properties:{measure:{type:"string"},agg:{type:"string",enum:["sum","avg","count","min","max","median"]},group_by:{type:"string"},filters:{type:"array",items:{type:"object",properties:{column:{type:"string"},op:{type:"string",enum:["eq","contains","gt","gte","lt","lte"]},value:{type:"string"}}}},sort:{type:"string",enum:["desc","asc","chronological"]},limit:{type:"integer"}}},
 execute:function(a){var st=$("msgs").lastChild.querySelector(".stt");if(st)st.textContent="Running calculations…";return runQuery(a)}};
-function getSmp(){if(smpTried)return Promise.resolve(smp);smpTried=true;try{return (window.claude&&claude.use?claude.use("sample"):Promise.resolve(null)).then(function(s){smp=s;return s},function(){return null})}catch(e){return Promise.resolve(null)}}
+var LOCALNOTE="";
+function localSmp(base){return function(turns,o){var msgs=turns.map(function(t){return {role:t.role,content:t.content}}),all="",tools=(o.tools||[]).map(function(t){return {name:t.name,description:t.description,input_schema:t.inputSchema}});
+function step(n){return fetch(base+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:msgs,tools:tools}),signal:o.signal}).then(function(r){return r.json().then(function(j){if(!r.ok)throw {code:"local_error",message:j.error||"The Mirai server returned an error."};return j})}).then(function(j){
+var txt=j.content.filter(function(x){return x.type==="text"}).map(function(x){return x.text}).join("");all+=txt;if(txt&&o.onText)o.onText({text:all});
+if(j.stop_reason==="tool_use"&&n<5){msgs.push({role:"assistant",content:j.content.map(function(x){return x.type==="tool_use"?{type:"tool_use",id:x.id,name:x.name,input:x.input}:{type:"text",text:x.text||""}})});
+var res=j.content.filter(function(x){return x.type==="tool_use"}).map(function(x){var out,t=(o.tools||[]).filter(function(q){return q.name===x.name})[0];try{out=JSON.stringify(t.execute(x.input))}catch(e){out="Error: "+e.message}return {type:"tool_result",tool_use_id:x.id,content:out}});msgs.push({role:"user",content:res});all+=all?"\n":"";return step(n+1)}
+return {text:all,truncated:j.stop_reason==="max_tokens"}})}
+return step(0)}}
+function getSmp(){if(smp)return Promise.resolve(smp);LOCALNOTE="";
+var viaClaude=function(){try{return (window.claude&&claude.use?claude.use("sample"):Promise.resolve(null)).then(function(x){return x},function(){return null})}catch(e){return Promise.resolve(null)}};
+var probe=function(base){return fetch(base+"/api/health").then(function(r){return r.json()}).then(function(j){if(j&&j.ok){if(j.ai)return localSmp(base);LOCALNOTE="The Mirai server is running but has no API key. Add GEMINI_API_KEY to the .env file and restart the server."}return null},function(){return null})};
+return viaClaude().then(function(x){return x||probe("").then(function(y){return y||probe("http://localhost:8000")})}).then(function(x){smp=x;return x})}
 function setSend(b){busy=b;$("sb").textContent=b?"Stop":"Send";$("sb").className="btn "+(b?"s":"p")}
 function ask(q){q=(q||"").trim();if(!q)return;if(busy)return;$("qi").value="";$("chips").innerHTML="";addB("u",esc(q));var bub=addB("a",'<span class="stt">Thinking…</span>');setSend(true);ctl=new AbortController();
 getSmp().then(function(sm){
-if(!sm){bub.innerHTML=md(quick(q))+"<p class='note'>Free-form AI answers work when this page is opened inside Claude. These are quick built-in answers.</p>";setSend(false);return}
+if(!sm){bub.innerHTML=md(quick(q))+"<p class='note'>"+(LOCALNOTE||"AI answers are off here. Start the Mirai server (python server.py) with your free Gemini API key (see the README), or open this page inside Claude. These are quick built-in answers.")+"</p>";setSend(false);return}
 turns.push({role:"user",content:(turns.length?"":CTX)+q});if(turns.length>13)turns.splice(1,2);
 return sm(turns,{cache:false,signal:ctl.signal,tools:[TOOL],onText:function(o){bub.innerHTML=md(o.text.split("FOLLOWUPS:")[0])||'<span class="stt">Thinking…</span>'}}).then(function(r){
 var p=r.text.split("FOLLOWUPS:");bub.innerHTML=md(p[0].trim())+(r.truncated?"<p class='note'>Answer cut short. Ask me to continue.</p>":"");turns.push({role:"assistant",content:r.text});
-if(p[1])chips(p[1].split("|").map(function(x){return x.trim()}).filter(Boolean).slice(0,3));$("msgs").scrollTop=1e9},function(e){turns.pop();var c=e&&e.code;
+if(p[1])chips(p[1].split("|").map(function(x){return x.trim()}).filter(Boolean).slice(0,3));$("msgs").scrollTop=1e9},function(e){turns.pop();var c=e&&(e.code||(e.name==="AbortError"?"cancelled":""));
 if(c==="cancelled"){bub.innerHTML=md((e.text||"").split("FOLLOWUPS:")[0])||"<p class='note'>Stopped.</p>"}
-else bub.innerHTML="<p class='note'>"+(c==="not_granted"?"Mirai AI needs your permission to run. Send your question again and allow it when asked.":c==="rate_limited"?"Too many requests at once. Wait a moment and try again.":"Something went wrong. Please try again.")+"</p>"})}).then(function(){setSend(false)},function(){setSend(false)})}
+else bub.innerHTML="<p class='note'>"+(c==="local_error"?esc(e.message):c==="not_granted"?"Mirai AI needs your permission to run. Send your question again and allow it when asked.":c==="rate_limited"?"Too many requests at once. Wait a moment and try again.":"Something went wrong. Please try again.")+"</p>"})}).then(function(){setSend(false)},function(){setSend(false)})}
 $("sb").onclick=function(){if(busy){ctl&&ctl.abort()}else ask($("qi").value)};
 $("qi").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();if(!busy)ask($("qi").value)}};
 $("exp").onclick=function(){var csv=XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(CL));
@@ -186,7 +197,14 @@ $("file").onchange=function(e){handle(e.target.files[0])};
 var dz=$("drop");["dragover","dragenter"].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.style.background="var(--hl)"})});
 dz.addEventListener("dragleave",function(){dz.style.background=""});dz.addEventListener("drop",function(e){e.preventDefault();dz.style.background="";handle(e.dataTransfer.files[0])});
 
-function send(e){e.preventDefault();var f=e.target;
+function send(e){e.preventDefault();var f=e.target,b=f.querySelector("button[type=submit]"),st=$("fs");
+if(f._honey&&f._honey.value)return false;
+var d={name:f.n.value,company:f.c.value,email:f.e.value,whatsapp:f.w.value,message:f.m.value,_subject:"Mirai free data audit request from "+f.n.value,_template:"table",_captcha:"false",_replyto:f.e.value};
 var body="Name: "+f.n.value+"\nCompany: "+f.c.value+"\nEmail: "+f.e.value+"\nWhatsApp: "+f.w.value+"\n\n"+f.m.value;
-location.href="mailto:miraiaianalyst@gmail.com?subject="+encodeURIComponent("Free data audit request")+"&body="+encodeURIComponent(body);
-return false;}
+b.disabled=true;st.className="note";st.textContent="Sending…";
+fetch("https://formsubmit.co/ajax/miraiaianalyst@gmail.com",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(d)})
+.then(function(r){return r.json()}).then(function(j){if(j.success===true||j.success==="true"){st.textContent="Thank you! We received your request and will reply within a few hours.";f.reset()}else throw new Error("x")})
+.catch(function(){var mt="mailto:miraiaianalyst@gmail.com?subject="+encodeURIComponent("Free data audit request")+"&body="+encodeURIComponent(body),gm="https://mail.google.com/mail/?view=cm&fs=1&to=miraiaianalyst@gmail.com&su="+encodeURIComponent("Free data audit request")+"&body="+encodeURIComponent(body);
+st.className="fpanel";st.innerHTML='<b>Your message is ready. Pick one way to send it:</b><span class="fo"><a class="btn p" target="_blank" rel="noopener" href="https://wa.me/918975924587?text='+encodeURIComponent(body)+'">Send on WhatsApp</a><a class="btn s" target="_blank" rel="noopener" href="'+gm+'">Open Gmail</a><a class="btn s" href="'+mt+'">Email app</a><button type="button" class="btn s" id="cp">Copy message</button></span><textarea readonly rows="5" id="cb"></textarea>';
+$("cb").value=body;$("cp").onclick=function(){var t=$("cb");t.select();function ok(){$("cp").textContent="Copied"}try{navigator.clipboard.writeText(body).then(ok,function(){document.execCommand("copy");ok()})}catch(x){document.execCommand("copy");ok()}}})
+.then(function(){b.disabled=false});return false}
